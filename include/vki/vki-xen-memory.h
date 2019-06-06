@@ -50,6 +50,7 @@
 #define VKI_XENMEM_access_op                  21
 #define VKI_XENMEM_claim_pages                24
 #define VKI_XENMEM_machphys_compat_mfn_list   25
+#define VKI_XENMEM_get_vnumainfo              26
 
 struct vki_xen_memory_map {
     unsigned int nr_entries;
@@ -101,6 +102,13 @@ struct vki_xen_mem_event_op {
     vki_uint64_t    buffer;
     vki_uint64_t    gfn;
 };
+
+struct vki_xen_vmemrange {
+    vki_uint64_t start, end;
+    unsigned int flags;
+    unsigned int nid;
+};
+
 
 #endif // __VKI_XEN_MEMORY_H
 

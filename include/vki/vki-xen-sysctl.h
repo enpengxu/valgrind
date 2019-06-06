@@ -38,6 +38,15 @@
 #define VKI_XEN_SYSCTL_cpupool_op                    18
 #define VKI_XEN_SYSCTL_scheduler_op                  19
 #define VKI_XEN_SYSCTL_coverage_op                   20
+#define VKI_XEN_SYSCTL_psr_cmt_op                    21
+#define VKI_XEN_SYSCTL_pcitopoinfo                   22
+#define VKI_XEN_SYSCTL_psr_alloc                     23
+#define VKI_XEN_SYSCTL_tmem_op                       24
+#define VKI_XEN_SYSCTL_get_cpu_levelling_caps        25
+#define VKI_XEN_SYSCTL_get_cpu_featureset            26
+#define VKI_XEN_SYSCTL_livepatch_op                  27
+#define VKI_XEN_SYSCTL_set_parameter                 28
+#define VKI_XEN_SYSCTL_get_cpu_policy                29
 
 struct vki_xen_sysctl_readconsole {
     /* IN */
@@ -175,6 +184,17 @@ struct vki_xen_sysctl_sched_id {
     vki_uint32_t              sched_id;
 };
 
+struct vki_xen_sysctl_cpu_featureset {
+    vki_uint32_t index;       /* IN: Which featureset to query? */
+    vki_uint32_t nr_features; /* IN/OUT: Number of entries in/written to
+                               * 'features', or the maximum number of features if
+                               * the guest handle is NULL.  NB. All featuresets
+                               * come from the same numberspace, so have the same
+                               * maximum length. */
+    VKI_XEN_GUEST_HANDLE_64(vki_uint32) features; /* OUT: */
+};
+
+
 struct vki_xen_sysctl {
     vki_uint32_t cmd;
     vki_uint32_t interface_version; /* XEN_SYSCTL_INTERFACE_VERSION */
@@ -202,6 +222,13 @@ struct vki_xen_sysctl {
         struct vki_xen_sysctl_cpupool_op        cpupool_op;
         //struct vki_xen_sysctl_scheduler_op      scheduler_op;
         //struct vki_xen_sysctl_coverage_op       coverage_op;
+        //struct vki_xen_sysctl_psr_cmt_op        psr_cmt_op;
+        //struct vki_xen_sysctl_psr_alloc         psr_alloc;
+        //struct vki_xen_sysctl_cpu_levelling_caps cpu_levelling_caps;
+        struct vki_xen_sysctl_cpu_featureset    cpu_featureset;
+        //struct vki_xen_sysctl_livepatch_op      livepatch;
+        //struct vki_xen_sysctl_set_parameter     set_parameter;
+        //struct vki_xen_sysctl_cpu_policy        cpu_policy;
 
         vki_uint8_t                             pad[128];
     } u;

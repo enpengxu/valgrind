@@ -245,6 +245,19 @@ PRE(memory_op)
                     (Addr)&arg->gfn, sizeof(arg->gfn));
        break;
    }
+   case VKI_XENMEM_get_vnumainfo: {
+       struct vki_xen_vmemrange *arg =
+            (struct vki_xen_vmemrange *)ARG2;
+       PRE_MEM_READ("XENMEM_get_vnumainfo start",
+                    (Addr)&arg->start, sizeof(arg->start));
+       PRE_MEM_READ("XENMEM_get_vnumainfo end",
+                    (Addr)&arg->end, sizeof(arg->end));
+       PRE_MEM_READ("XENMEM_get_vnumainfo flags",
+                    (Addr)&arg->flags, sizeof(arg->flags));
+       PRE_MEM_READ("XENMEM_get_vnumainfo nid",
+                    (Addr)&arg->nid, sizeof(arg->nid));
+       break;
+   }
    default:
       bad_subop(tid, layout, arrghs, status, flags,
                 "__HYPERVISOR_memory_op", ARG1);
@@ -709,6 +722,12 @@ PRE(sysctl) {
       PRE_XEN_SYSCTL_READ(numainfo, node_to_memsize);
       PRE_XEN_SYSCTL_READ(numainfo, node_to_memfree);
       PRE_XEN_SYSCTL_READ(numainfo, node_to_node_distance);
+      break;
+
+   case VKI_XEN_SYSCTL_get_cpu_featureset:
+      PRE_XEN_SYSCTL_READ(cpu_featureset, index);
+      PRE_XEN_SYSCTL_READ(cpu_featureset, nr_features);
+      PRE_XEN_SYSCTL_READ(cpu_featureset, features);
       break;
 
    default:
