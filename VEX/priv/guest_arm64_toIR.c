@@ -1839,6 +1839,30 @@ static IRExpr* mk_arm64g_calculate_flags_nzcv ( void )
    return call;
 }
 
+static void
+atomic_load_add_store32(IRTemp addr, IRTemp add_val)
+{
+   IRCAS *cas;
+   IRTemp expd = newTemp(Ity_I32);
+   IRTemp new_val = newTemp(Ity_I32);
+   IRTemp old = newTemp(Ity_I32);
+
+   assign(old, load(Ity_I32, mkexpr(addr)));
+   assign(expd, load(Ity_I32, mkexpr(addr)));
+   assign(new_val, binop(Iop_Add32,
+                         mkexpr(expd), mkexpr(add_val)));
+
+   cas = mkIRCAS(IRTemp_INVALID, old,
+                 Iend_LE, mkexpr(addr),
+                 NULL, mkexpr(expd), /* expected value */
+                 NULL, mkexpr(new_val)  /* new value */);
+   stmt(IRStmt_CAS(cas));
+
+   /* If old_mem contains the expected value, then the CAS succeeded.
+      Otherwise, it did not */
+   jump_back(binop(Iop_CmpNE32, mkexpr(old), mkexpr(expd)));
+}
+
 
 /* Build IR to set the flags thunk, in the most general case. */
 static
@@ -6739,20 +6763,21 @@ Bool dis_ARM64_load_store(/*MB_OUT*/DisResult* dres, UInt insn,
             /* LDADD: 32-bit, no memory ordering variant */
             IRTemp ea = newTemp(Ity_I64);
             assign(ea, getIReg64orSP(Rn));
-
-            putIReg64orZR(Rt, loadLE(Ity_I64, mkexpr(ea)));
-
-            IRTemp tmp = newTemp(Ity_I32);
-
             IRTemp tRs = newTemp(Ity_I32);
             assign(tRs, getIReg32orSP(Rs));
+#if 0
+
+            IRTemp tmp = newTemp(Ity_I32);
 
             IRTemp tRt = newTemp(Ity_I32);
             assign(tRt, getIReg32orSP(Rt));
 
             assign(tmp, binop(Iop_Add32, mkexpr(tRs), mkexpr(tRt)));
             storeLE(mkexpr(ea), mkexpr(tmp));
-
+#else
+            atomic_load_add_store32(ea, tRs);
+#endif
+            putIReg64orZR(Rt, loadLE(Ity_I64, mkexpr(ea)));
             DIP("ldadd %s, %s,[%s] \n", nameIReg32orZR(Rs), nameIReg32orZR(Rt), nameIReg32orZR(Rs));
             return True;
          } else {
