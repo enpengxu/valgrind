@@ -6718,6 +6718,50 @@ Bool dis_ARM64_load_store(/*MB_OUT*/DisResult* dres, UInt insn,
       return True;
    }
 
+   /* ARMv8.1 LSE.
+      LDADD, LDADDA, LDADDAL, LDADDL
+   */
+   if (INSN(29,24) == BITS6(1,1,1, 0,0,0) &&
+       INSN(21,21) == 1 ) {
+      UInt   size   = INSN(31,30);
+      UInt   V      = INSN(26,26);
+      UInt   A      = INSN(23,23);
+      UInt   R      = INSN(22,22);
+      UInt   opc    = INSN(22,22);
+      UInt   Rs     = INSN(20,16);
+      UInt   Rn     = INSN( 9,5);
+      UInt   Rt     = INSN( 4,0);
+
+      if (opc == 0 && (size & 0x2)) {
+         /* LDADD, LDADDA,LDADDAL, LDADDL */
+         if (size == BITS2(1,0) &&
+             A == 0 && R == 0 && Rt != BITS5(1,1,1,1,1)) {
+            /* LDADD: 32-bit, no memory ordering variant */
+            IRTemp ea = newTemp(Ity_I64);
+            assign(ea, getIReg64orSP(Rn));
+
+            putIReg64orZR(Rt, loadLE(Ity_I64, mkexpr(ea)));
+
+            IRTemp tmp = newTemp(Ity_I32);
+
+            IRTemp tRs = newTemp(Ity_I32);
+            assign(tRs, getIReg32orSP(Rs));
+
+            IRTemp tRt = newTemp(Ity_I32);
+            assign(tRt, getIReg32orSP(Rt));
+
+            assign(tmp, binop(Iop_Add32, mkexpr(tRs), mkexpr(tRt)));
+            storeLE(mkexpr(ea), mkexpr(tmp));
+
+            DIP("ldadd %s, %s,[%s] \n", nameIReg32orZR(Rs), nameIReg32orZR(Rt), nameIReg32orZR(Rs));
+            return True;
+         } else {
+         }
+         /* No actual code to generate. */
+      }
+      vex_printf("TODO. LSE instructions no imp yet");
+   }
+
    vex_printf("ARM64 front end: load_store\n");
    return False;
 #  undef INSN
